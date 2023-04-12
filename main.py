@@ -27,14 +27,18 @@ class Board:
         for x in range(4):
             for y in range(4):
                 for z in range(4):
-                    print(f"({x},{y},{z}): {self.grid[x][y][z].get_color()} ", end="")
-                print()
+                    color = self.grid[x][y][z].get_color()
+                    if color is not None:
+                        print(f"{color}|", end="")
+                    else:
+                        print("_|", end="")
+                print(" ", end="")
             print()
 
 
 board = Board()
-board.set_point_color(0, 0, 0, 'red')
-board.set_point_color(1, 0, 0, 'red')
-board.set_point_color(2, 0, 0, 'red')
-board.set_point_color(3, 0, 0, 'red')
+board.set_point_color(0, 0, 0, 'x')
+board.set_point_color(1, 1, 1, 'x')
+board.set_point_color(2, 2, 2, 'x')
+board.set_point_color(3, 3, 3, 'x')
 board.print_board()
