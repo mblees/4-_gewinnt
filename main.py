@@ -1,3 +1,9 @@
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel
+from PyQt5.QtGui import QIcon
+from PyQt5.QtOpenGL import QGLWidget
+from OpenGL.GL import *
+
+
 class Point:
     def __init__(self):
         self.color = None
@@ -150,11 +156,58 @@ class Board:
         return False
 
 
-board = Board()
-board.set_point_color(0, 0, 0, 'x')
-board.set_point_color(1, 1, 1, 'x')
-board.set_point_color(2, 2, 2, 'x')
-board.set_point_color(3, 3, 3, 'x')
-board.print_board()
-if board.check_color_win('x'):
-    print('x has won')
+class GUI:
+    def __init__(self, board):
+        self.board = board
+
+
+class OpenGLWidget(QGLWidget):
+    def __init__(self, parent=None):
+        super(OpenGLWidget, self).__init__(parent)
+
+    def initializeGL(self):
+        glClearColor(0.0, 0.0, 0.0, 1.0)
+
+    def paintGL(self):
+        glClear(GL_COLOR_BUFFER_BIT)
+        glBegin(GL_TRIANGLES)
+        glColor3f(1.0, 0.0, 0.0)
+        glVertex3f(0.0, 1.0, 0.0)
+        glColor3f(0.0, 1.0, 0.0)
+        glVertex3f(-1.0, -1.0, 0.0)
+        glColor3f(0.0, 0.0, 1.0)
+        glVertex3f(1.0, -1.0, 0.0)
+        glEnd()
+
+
+class Example(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.init_ui()
+
+    def init_ui(self):
+        grid = QGridLayout()
+        self.setLayout(grid)
+
+        opengl = OpenGLWidget()
+        grid.addWidget(opengl, 0, 0, 1, 2)
+
+        label = QLabel('3D GUI')
+        grid.addWidget(label, 1, 0)
+
+        self.setGeometry(300, 300, 350, 300)
+        self.setWindowTitle('3D GUI')
+        self.setWindowIcon(QIcon('icon.png'))
+        self.show()
+
+
+if __name__ == '__main__':
+    app = QApplication([])
+    ex = Example()
+    app.exec_()
+
+myBoard = Board()
+myBoard.set_point_color(0, 0, 0, 'red')
+myBoard.set_point_color(0, 0, 1, 'red')
+myBoard.set_point_color(0, 0, 2, 'red')
+myBoard.set_point_color(0, 0, 3, 'red')
