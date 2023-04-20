@@ -1,7 +1,8 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel
-from PyQt5.QtGui import QIcon
-from PyQt5.QtOpenGL import QGLWidget
+import pygame
+import math
+from pygame.locals import *
 from OpenGL.GL import *
+from OpenGL.GLU import *
 
 
 class Point:
@@ -157,57 +158,97 @@ class Board:
 
 
 class GUI:
-    def __init__(self, board):
-        self.board = board
+    vertices = (
+        (2, 2, 0),
+        (-2, -2, 0),
+        (-2, 2, 0),
+        (2, -2, 0)
+    )
 
+    edges = (
+        (0, 2),
+        (0, 3),
+        (1, 2),
+        (1, 3)
+    )
 
-class OpenGLWidget(QGLWidget):
-    def __init__(self, parent=None):
-        super(OpenGLWidget, self).__init__(parent)
+    def __init__(self):
+        pass
 
-    def initializeGL(self):
-        glClearColor(0.0, 0.0, 0.0, 1.0)
-
-    def paintGL(self):
-        glClear(GL_COLOR_BUFFER_BIT)
-        glBegin(GL_TRIANGLES)
-        glColor3f(1.0, 0.0, 0.0)
-        glVertex3f(0.0, 1.0, 0.0)
-        glColor3f(0.0, 1.0, 0.0)
-        glVertex3f(-1.0, -1.0, 0.0)
-        glColor3f(0.0, 0.0, 1.0)
-        glVertex3f(1.0, -1.0, 0.0)
+    def rectangle(self):
+        glColor3f(0.5, 0.5, 1.0)
+        glBegin(GL_QUADS)
+        for edge in self.edges:
+            for vertex in edge:
+                glVertex3fv(self.vertices[vertex])
         glEnd()
 
+    def sphere(self, radius, subdivisions, center):
+        glColor3f(1, 1, 1)
+        vertex_array = []
+        normal_array = []
+        for i in range(subdivisions):
+            phi = math.pi * (i + 0.5) / subdivisions
+            for j in range(subdivisions):
+                theta = 2 * math.pi * j / subdivisions
+                x = radius * math.sin(phi) * math.cos(theta) + center[0]
+                y = radius * math.sin(phi) * math.sin(theta) + center[1]
+                z = radius * math.cos(phi) + center[2]
+                vertex_array.append([x, y, z])
+                normal_array.append([x - center[0], y - center[1], z - center[2]])
 
-class Example(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.init_ui()
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glBegin(GL_TRIANGLES)
+        for i in range(subdivisions):
+            for j in range(subdivisions):
+                v1 = i * subdivisions + j
+                v2 = v1 + 1
+                v3 = (i + 1) * subdivisions + j
+                if v1 < len(vertex_array) and v2 < len(vertex_array) and v3 < len(vertex_array):
+                    glNormal3fv(normal_array[v1])
+                    glVertex3fv(vertex_array[v1])
+                    glNormal3fv(normal_array[v2])
+                    glVertex3fv(vertex_array[v2])
+                    glNormal3fv(normal_array[v3])
+                    glVertex3fv(vertex_array[v3])
 
-    def init_ui(self):
-        grid = QGridLayout()
-        self.setLayout(grid)
+                    v1 = (i + 1) * subdivisions + j
+                    v2 = v1 + 1
+                    v3 = i * subdivisions + j + 1
+                    if v1 < len(vertex_array) and v2 < len(vertex_array) and v3 < len(vertex_array):
+                        glNormal3fv(normal_array[v1])
+                        glVertex3fv(vertex_array[v1])
+                        glNormal3fv(normal_array[v2])
+                        glVertex3fv(vertex_array[v2])
+                        glNormal3fv(normal_array[v3])
+                        glVertex3fv(vertex_array[v3])
+        glEnd()
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
-        opengl = OpenGLWidget()
-        grid.addWidget(opengl, 0, 0, 1, 2)
+    def init_window(self):
+        pygame.init()
+        display = (800, 600)
+        pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
+        gluPerspective(50, (display[0] / display[1]), 0.1, 50.0)
+        gluLookAt(5, 5, 5, 0, 0, 0, 0, 0, 1)
 
-        label = QLabel('3D GUI')
-        grid.addWidget(label, 1, 0)
+    def start_game_loop(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
 
-        self.setGeometry(300, 300, 350, 300)
-        self.setWindowTitle('3D GUI')
-        self.setWindowIcon(QIcon('icon.png'))
-        self.show()
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            self.rectangle()
+            self.sphere(0.4, 15, [1.5, 1.5, 0.5])
+            self.sphere(0.4, 15, [0.5, 1.5, 0.5])
+            self.sphere(0.4, 15, [-0.5, 1.5, 0.5])
+            self.sphere(0.4, 15, [-1.5, 1.5, 0.5])
+            pygame.display.flip()
+            pygame.time.wait(10)
 
 
-if __name__ == '__main__':
-    app = QApplication([])
-    ex = Example()
-    app.exec_()
-
-myBoard = Board()
-myBoard.set_point_color(0, 0, 0, 'red')
-myBoard.set_point_color(0, 0, 1, 'red')
-myBoard.set_point_color(0, 0, 2, 'red')
-myBoard.set_point_color(0, 0, 3, 'red')
+myGui = GUI()
+myGui.init_window()
+myGui.start_game_loop()
