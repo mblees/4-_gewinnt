@@ -183,8 +183,8 @@ class GUI:
                 glVertex3fv(self.vertices[vertex])
         glEnd()
 
-    def sphere(self, radius, subdivisions, center):
-        glColor3f(1, 1, 1)
+    def sphere(self, radius, subdivisions, center, color):
+        glColor3f(color[0], color[1], color[2])
         vertex_array = []
         normal_array = []
         for i in range(subdivisions):
@@ -241,13 +241,51 @@ class GUI:
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             self.rectangle()
-            self.sphere(0.4, 15, [1.5, 1.5, 0.5])
-            self.sphere(0.4, 15, [0.5, 1.5, 0.5])
-            self.sphere(0.4, 15, [-0.5, 1.5, 0.5])
-            self.sphere(0.4, 15, [-1.5, 1.5, 0.5])
+            self.sphere(0.5, 15, [-1.5, -1.5, 0.5], [1, 1, 1])
             pygame.display.flip()
             pygame.time.wait(10)
 
+
+class Game:
+    def __init__(self):
+        self.board = Board()
+
+    def play(self):
+        player1_turn = True
+        while True:
+            if player1_turn:
+                color = "X"
+            else:
+                color = "O"
+            print(f"Player {color}, choose a position (x, y, z): ")
+            x = int(input())
+            y = int(input())
+            z = int(input())
+
+            if self.board.set_point_color(x, y, z, color):
+                self.board.print_board()
+                if self.board.check_color_win(color):
+                    print(f"Player {color} wins!")
+                    return
+                player1_turn = not player1_turn
+            else:
+                print("That position is already taken. Try again.")
+
+            if self.board_is_full():
+                print("Board is full. Game over.")
+                return
+
+    def board_is_full(self):
+        for x in range(4):
+            for y in range(4):
+                for z in range(4):
+                    if self.board.get_point(x, y, z).get_color() is None:
+                        return False
+        return True
+
+
+myGame = Game()
+myGame.play()
 
 myGui = GUI()
 myGui.init_window()
